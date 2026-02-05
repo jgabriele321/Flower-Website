@@ -1,7 +1,7 @@
 export const DEFAULT_COUNTS = {
-  focal: 3,
-  secondary: 4,
-  greenery: 5,
+  focal: 2,      // Reduced from 3 (33% reduction)
+  secondary: 3,  // Reduced from 4 (25% reduction)
+  greenery: 3,   // Reduced from 5 (40% reduction)
 };
 
 const BUCKETS = ["focal", "secondary", "greenery"];
@@ -91,8 +91,8 @@ function checkCollision(flower1, flower2) {
   const dy = flower1.y - flower2.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
   
-  // Add a small buffer (10% of average radius) to ensure spacing
-  const buffer = (radius1 + radius2) * 0.1;
+  // Add a larger buffer (30% of average radius) to ensure better spacing
+  const buffer = (radius1 + radius2) * 0.3;
   return distance < (minDistance + buffer);
 }
 
