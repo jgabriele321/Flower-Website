@@ -13,6 +13,7 @@ const toast = document.getElementById("toast");
 let stage;
 let backgroundLayer;
 let bouquetLayer;
+let transformer;
 let manifest;
 let currentFlowers = [];
 let vaseNode = null;
@@ -52,7 +53,32 @@ function setupStage() {
   bouquetLayer = new Konva.Layer();
   stage.add(backgroundLayer);
   stage.add(bouquetLayer);
+
+  // Deselect when clicking on empty area
+  stage.on("click tap", (e) => {
+    if (e.target === stage && transformer) {
+      transformer.nodes([]);
+      bouquetLayer.draw();
+    }
+  });
+
   window.addEventListener("resize", handleResize, { passive: true });
+}
+
+function createTransformer() {
+  transformer = new Konva.Transformer({
+    rotateEnabled: true,
+    rotationSnaps: [0, 45, 90, 135, 180, 225, 270, 315],
+    rotationSnapTolerance: 5,
+    borderStroke: '#8b5cf6',
+    anchorStroke: '#8b5cf6',
+    anchorFill: '#ffffff',
+    anchorSize: 12,
+    anchorCornerRadius: 2,
+    keepRatio: true,
+    enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+  });
+  bouquetLayer.add(transformer);
 }
 
 function buildVase(image, stageSize) {
@@ -101,7 +127,7 @@ function buildBackground(image, stageSize) {
 }
 
 function wireInteractivity(node) {
-  node.on("mouseover touchstart", () => {
+  node.on("mouseover", () => {
     if (arrangeMode) document.body.style.cursor = "grab";
   });
   node.on("mouseout", () => {
@@ -113,8 +139,14 @@ function wireInteractivity(node) {
   node.on("dragend", () => {
     document.body.style.cursor = arrangeMode ? "grab" : "default";
   });
+  // Attach transformer and bring to front on mousedown/touchstart
   node.on("mousedown touchstart", () => {
     bringToFront(node);
+    if (arrangeMode && transformer) {
+      transformer.nodes([node]);
+      transformer.moveToTop();
+      bouquetLayer.draw();
+    }
   });
 }
 
@@ -203,6 +235,9 @@ async function buildBouquet(options = {}) {
     if (plan.vaseSrc && imageMap[plan.vaseSrc]) {
       buildVase(imageMap[plan.vaseSrc], stageSize);
     }
+
+    // Create fresh transformer after building bouquet
+    createTransformer();
 
     backgroundLayer.draw();
     bouquetLayer.draw();
