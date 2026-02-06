@@ -6,6 +6,9 @@ const container = document.getElementById("canvas-container");
 const loadingEl = document.getElementById("loading");
 const newBtn = document.getElementById("new-bouquet");
 const arrangeBtn = document.getElementById("arrange-toggle");
+const captureBtn = document.getElementById("capture-btn");
+const galleryBtn = document.getElementById("gallery-btn");
+const toast = document.getElementById("toast");
 
 let stage;
 let backgroundLayer;
@@ -73,8 +76,15 @@ function buildVase(image, stageSize) {
     y,
     width,
     height: targetHeight,
-    listening: false,
+    listening: true, // Enable listening so vase can receive click events
+    draggable: false, // Explicitly set to false to prevent dragging
   });
+  
+  // Add click handler to bring vase to front when clicked
+  vaseNode.on("mousedown touchstart", () => {
+    bringToFront(vaseNode);
+  });
+  
   bouquetLayer.add(vaseNode);
 }
 
@@ -110,7 +120,7 @@ function wireInteractivity(node) {
 
 function bringToFront(node) {
   node.moveToTop();
-  if (vaseNode) vaseNode.moveToTop();
+  // Don't automatically move vase to top - flowers can be in front of vase
   bouquetLayer.draw();
 }
 
@@ -250,6 +260,144 @@ infoOverlay.addEventListener("click", (e) => {
   if (e.target === infoOverlay) {
     infoOverlay.classList.add("hidden");
   }
+});
+
+// Toast notification
+function showToast(message = "Saved!") {
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 2000);
+}
+
+// Capture and upload to gallery
+async function captureToGallery() {
+  if (!stage) return;
+
+  captureBtn.disabled = true;
+  captureBtn.textContent = "Saving...";
+
+  try {
+    // Capture canvas as JPEG
+    const dataUrl = stage.toDataURL({
+      mimeType: "image/jpeg",
+      quality: 0.9,
+    });
+
+    // Upload to server
+    const res = await fetch("/api/gallery/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: dataUrl }),
+    });
+
+    if (!res.ok) throw new Error("Upload failed");
+
+    showToast("Saved!");
+  } catch (err) {
+    console.error("Capture error:", err);
+    showToast("Failed to save");
+  } finally {
+    captureBtn.disabled = false;
+    captureBtn.textContent = "Save";
+  }
+}
+
+captureBtn.addEventListener("click", captureToGallery);
+
+// Gallery state
+let galleryImages = [];
+let galleryIndex = 0;
+
+// Load gallery images
+async function loadGalleryImages() {
+  try {
+    const res = await fetch("/api/gallery/list");
+    if (!res.ok) throw new Error("Failed to load gallery");
+    const data = await res.json();
+    galleryImages = data.images || [];
+    return galleryImages;
+  } catch (err) {
+    console.error("Gallery load error:", err);
+    return [];
+  }
+}
+
+// Open gallery
+async function openGallery() {
+  const overlay = document.getElementById("gallery-overlay");
+  const counter = document.getElementById("gallery-counter");
+  const img = document.getElementById("gallery-image");
+  const emptyMsg = document.getElementById("gallery-empty");
+
+  overlay.classList.remove("hidden");
+
+  await loadGalleryImages();
+
+  if (galleryImages.length === 0) {
+    img.style.display = "none";
+    emptyMsg.style.display = "block";
+    counter.textContent = "No photos yet";
+  } else {
+    galleryIndex = 0;
+    img.style.display = "block";
+    emptyMsg.style.display = "none";
+    showGalleryImage();
+  }
+}
+
+// Show current gallery image
+function showGalleryImage() {
+  const img = document.getElementById("gallery-image");
+  const counter = document.getElementById("gallery-counter");
+
+  if (galleryImages.length === 0) return;
+
+  const current = galleryImages[galleryIndex];
+  img.src = current.url;
+  counter.textContent = `${galleryIndex + 1} of ${galleryImages.length}`;
+}
+
+// Navigate gallery
+function galleryPrev() {
+  if (galleryImages.length === 0) return;
+  galleryIndex = (galleryIndex - 1 + galleryImages.length) % galleryImages.length;
+  showGalleryImage();
+}
+
+function galleryNext() {
+  if (galleryImages.length === 0) return;
+  galleryIndex = (galleryIndex + 1) % galleryImages.length;
+  showGalleryImage();
+}
+
+// Close gallery
+function closeGallery() {
+  document.getElementById("gallery-overlay").classList.add("hidden");
+}
+
+galleryBtn.addEventListener("click", openGallery);
+
+// Gallery navigation event listeners (set up after DOM ready)
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("gallery-close")?.addEventListener("click", closeGallery);
+  document.getElementById("gallery-prev")?.addEventListener("click", galleryPrev);
+  document.getElementById("gallery-next")?.addEventListener("click", galleryNext);
+
+  document.getElementById("gallery-overlay")?.addEventListener("click", (e) => {
+    if (e.target.id === "gallery-overlay") closeGallery();
+  });
+
+  // Keyboard navigation
+  document.addEventListener("keydown", (e) => {
+    const overlay = document.getElementById("gallery-overlay");
+    if (overlay?.classList.contains("hidden")) return;
+
+    if (e.key === "ArrowLeft") galleryPrev();
+    else if (e.key === "ArrowRight") galleryNext();
+    else if (e.key === "Escape") closeGallery();
+  });
 });
 
 init();

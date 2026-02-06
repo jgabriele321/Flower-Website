@@ -1,0 +1,13 @@
+{
+  "name": "chichester-gallery-server",
+  "version": "1.0.0",
+  "description": "Gallery API server for Bloom Studio",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "sharp": "^0.33.0"
+  }
+}

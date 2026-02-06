@@ -1,0 +1,16 @@
+[Unit]
+Description=Chichester Gallery API Server
+After=network.target
+
+[Service]
+Type=simple
+User=defibeats
+WorkingDirectory=/var/www/chichester/server
+ExecStart=/usr/bin/node index.js
+Environment=PORT=3086
+Environment=GALLERY_DIR=/var/www/chichester/gallery
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
