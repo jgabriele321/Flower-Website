@@ -20,15 +20,14 @@ function sampleWithReplacement(arr, count) {
   return out;
 }
 
-export function pickPalette(manifest, lastPalette) {
+export function pickPalette(manifest) {
   const keys = Object.keys(manifest?.palettes || {});
   if (keys.length === 0) return null;
-  if (lastPalette && keys.includes(lastPalette)) return lastPalette;
   return randomChoice(keys);
 }
 
 export function prepareBouquet(manifest, options = {}) {
-  const paletteName = options.palette || pickPalette(manifest, options.lastPalette);
+  const paletteName = options.palette || pickPalette(manifest);
   const paletteBuckets =
     (paletteName && manifest?.palettes?.[paletteName]) || {
       focal: [],
