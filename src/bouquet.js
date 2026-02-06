@@ -1,7 +1,7 @@
 export const DEFAULT_COUNTS = {
-  focal: 2,      // Reduced from 3 (33% reduction)
-  secondary: 3,  // Reduced from 4 (25% reduction)
-  greenery: 3,   // Reduced from 5 (40% reduction)
+  focal: 3,
+  secondary: 5,
+  greenery: 5,
 };
 
 const BUCKETS = ["focal", "secondary", "greenery"];
@@ -60,25 +60,32 @@ function randomPointInEllipse(cx, cy, rx, ry) {
   };
 }
 
-function rotationForBucket(bucket) {
-  const ranges = {
-    focal: 12,
-    secondary: 18,
-    greenery: 28,
+function rotationForBucket(bucket, positionAngle) {
+  // More aggressive rotation to make bouquet "bloom" outward
+  // Flowers rotate away from center based on their position
+  const baseRotation = {
+    focal: 25,
+    secondary: 40,
+    greenery: 55,
   };
-  const r = ranges[bucket] || 10;
-  return (Math.random() * 2 - 1) * r;
+  const r = baseRotation[bucket] || 30;
+  
+  // Add outward rotation based on position angle (flowers lean outward from center)
+  const outwardLean = positionAngle * 0.6; // Lean away from center
+  const randomVariation = (Math.random() * 2 - 1) * (r * 0.5);
+  
+  return outwardLean + randomVariation;
 }
 
 // Estimate flower radius based on bucket and scale
-// Using typical flower image dimensions as reference (approx 800x800px)
+// Using smaller base radius since flowers are now max 250px wide
 function estimateFlowerRadius(bucket, scale) {
   const baseRadius = {
-    focal: 400,      // Larger focal flowers
-    secondary: 350,  // Medium secondary flowers
-    greenery: 300,   // Smaller greenery
+    focal: 125,      // Larger focal flowers (half of 250px max)
+    secondary: 100,  // Medium secondary flowers
+    greenery: 80,    // Smaller greenery
   };
-  return (baseRadius[bucket] || 350) * scale;
+  return (baseRadius[bucket] || 100) * scale;
 }
 
 // Check if two flowers collide based on their positions and estimated sizes
@@ -91,8 +98,8 @@ function checkCollision(flower1, flower2) {
   const dy = flower1.y - flower2.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
   
-  // Add a larger buffer (30% of average radius) to ensure better spacing
-  const buffer = (radius1 + radius2) * 0.3;
+  // Add a small buffer (15% of average radius) for spacing without pushing flowers out
+  const buffer = (radius1 + radius2) * 0.15;
   return distance < (minDistance + buffer);
 }
 
@@ -101,22 +108,22 @@ export function layoutBouquet(flowers, stageSize) {
   const aspectRatio = height / width;
   const isTallMobile = aspectRatio > 1.4;
 
-  // Adjust center and scale for tall mobile screens
+  // Center flowers horizontally, position them to overlap with vase opening
   const cx = width * 0.5;
-  const cy = isTallMobile ? height * 0.38 : height * 0.46;
+  const cy = isTallMobile ? height * 0.51 : height * 0.55;
 
-  // More aggressive scale reduction on tall screens
-  let baseScale = clamp(width / 1400, 0.38, 0.78);
+  // Scale flowers to a nice visible size
+  let baseScale = clamp(width / 1400, 1.5, 3.0);
   if (isTallMobile) {
-    baseScale *= 0.75;
+    baseScale *= 0.7;
   }
 
-  // Shrink ellipse radii on tall screens
-  const radiusMult = isTallMobile ? 0.8 : 1.0;
+  // Much tighter ellipse radii to keep flowers within vase bounds
+  const radiusMult = isTallMobile ? 0.6 : 0.7;
   const radii = {
-    focal: { rx: width * 0.10 * radiusMult, ry: height * 0.05 * radiusMult, yOffset: -6 },
-    secondary: { rx: width * 0.14 * radiusMult, ry: height * 0.07 * radiusMult, yOffset: 6 },
-    greenery: { rx: width * 0.20 * radiusMult, ry: height * 0.10 * radiusMult, yOffset: 14 },
+    focal: { rx: width * 0.06 * radiusMult, ry: height * 0.03 * radiusMult, yOffset: -20 },
+    secondary: { rx: width * 0.08 * radiusMult, ry: height * 0.04 * radiusMult, yOffset: -10 },
+    greenery: { rx: width * 0.10 * radiusMult, ry: height * 0.05 * radiusMult, yOffset: 0 },
   };
 
   const scaleForBucket = {
@@ -131,7 +138,6 @@ export function layoutBouquet(flowers, stageSize) {
   return flowers.map((flower, idx) => {
     const config = radii[flower.bucket] || radii.secondary;
     const scale = scaleForBucket[flower.bucket] ?? baseScale;
-    const rotation = rotationForBucket(flower.bucket);
     
     let flowerPos = null;
     let attempts = 0;
@@ -141,6 +147,13 @@ export function layoutBouquet(flowers, stageSize) {
     while (hasCollision && attempts < MAX_RETRIES) {
       const pos = randomPointInEllipse(cx, cy + config.yOffset, config.rx, config.ry);
       const jitterY = (Math.random() * 2 - 1) * 8;
+      
+      // Calculate angle from center for outward bloom rotation
+      const dx = pos.x - cx;
+      const dy = (pos.y + jitterY) - cy;
+      const positionAngle = Math.atan2(dx, -dy) * (180 / Math.PI); // Angle in degrees, 0 = up
+      
+      const rotation = rotationForBucket(flower.bucket, positionAngle);
       
       const candidateFlower = {
         ...flower,
@@ -166,6 +179,12 @@ export function layoutBouquet(flowers, stageSize) {
     if (!flowerPos) {
       const pos = randomPointInEllipse(cx, cy + config.yOffset, config.rx, config.ry);
       const jitterY = (Math.random() * 2 - 1) * 8;
+      
+      const dx = pos.x - cx;
+      const dy = (pos.y + jitterY) - cy;
+      const positionAngle = Math.atan2(dx, -dy) * (180 / Math.PI);
+      const rotation = rotationForBucket(flower.bucket, positionAngle);
+      
       flowerPos = {
         ...flower,
         x: pos.x,

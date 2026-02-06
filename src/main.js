@@ -14,7 +14,7 @@ let manifest;
 let currentFlowers = [];
 let vaseNode = null;
 let backgroundNode = null;
-let arrangeMode = false;
+let arrangeMode = true;
 let lastPalette = null;
 let isBuilding = false;
 
@@ -173,7 +173,7 @@ async function buildBouquet(options = {}) {
         x: flower.x,
         y: flower.y,
         offsetX: img.width / 2,
-        offsetY: img.height / 2,
+        offsetY: img.height * 0.85, // Pivot from bottom of flower so stems go into vase
         scaleX: flower.scale,
         scaleY: flower.scale,
         rotation: flower.rotation,
@@ -226,14 +226,30 @@ async function init() {
 }
 
 newBtn.addEventListener("click", async () => {
-  if (arrangeMode) {
-    toggleArrange(); // turn off
-  }
   await buildBouquet();
 });
 
 arrangeBtn.addEventListener("click", () => {
   toggleArrange();
+});
+
+// Info popup
+const infoBtn = document.getElementById("info-btn");
+const infoOverlay = document.getElementById("info-overlay");
+const infoClose = document.getElementById("info-close");
+
+infoBtn.addEventListener("click", () => {
+  infoOverlay.classList.remove("hidden");
+});
+
+infoClose.addEventListener("click", () => {
+  infoOverlay.classList.add("hidden");
+});
+
+infoOverlay.addEventListener("click", (e) => {
+  if (e.target === infoOverlay) {
+    infoOverlay.classList.add("hidden");
+  }
 });
 
 init();
