@@ -279,10 +279,21 @@ async function captureToGallery() {
   captureBtn.textContent = "Saving...";
 
   try {
-    // Capture canvas as JPEG
+    // Capture only the center 90% of the canvas (where the flowers are)
+    const stageWidth = stage.width();
+    const stageHeight = stage.height();
+    const cropWidth = stageWidth * 0.9;
+    const cropHeight = stageHeight * 0.9;
+    const cropX = (stageWidth - cropWidth) / 2;
+    const cropY = (stageHeight - cropHeight) / 2;
+
     const dataUrl = stage.toDataURL({
       mimeType: "image/jpeg",
       quality: 0.9,
+      x: cropX,
+      y: cropY,
+      width: cropWidth,
+      height: cropHeight,
     });
 
     // Upload to server

@@ -1,15 +1,29 @@
 #!/bin/bash
 # Deploy script for Chichester with Gallery feature
 # Run this on the SERVER after uploading files
+# IMPORTANT: This script preserves the /gallery folder with user photos!
 
 set -e
 
 echo "=== Chichester Gallery Deployment ==="
 
+# Backup gallery if it exists
+if [ -d "/var/www/chichester/gallery" ]; then
+  echo "Backing up existing gallery photos..."
+  sudo mv /var/www/chichester/gallery /tmp/chichester-gallery-backup
+fi
+
 # Create gallery directory
 echo "Creating gallery directory..."
 sudo mkdir -p /var/www/chichester/gallery
 sudo chown defibeats:defibeats /var/www/chichester/gallery
+
+# Restore gallery photos if backup exists
+if [ -d "/tmp/chichester-gallery-backup" ]; then
+  echo "Restoring gallery photos..."
+  sudo cp -r /tmp/chichester-gallery-backup/* /var/www/chichester/gallery/ 2>/dev/null || true
+  sudo rm -rf /tmp/chichester-gallery-backup
+fi
 
 # Install server dependencies
 echo "Installing server dependencies..."

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bloom Studio</title>
+    <script type="module" crossorigin src="/assets/index-BLhDtV3G.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BQji3LVW.css">
+  </head>
+  <body>
+    <div id="app">
+      <header class="controls">
+        <button id="new-bouquet">New Bouquet</button>
+        <button id="arrange-toggle" aria-pressed="true">Arrange Mode: On</button>
+        <button id="capture-btn">Save</button>
+        <button id="gallery-btn">Gallery</button>
+      </header>
+      <button id="info-btn" aria-label="Info">i</button>
+      <div id="toast" class="hidden">Saved!</div>
+      <div id="canvas-container">
+        <div id="loading">Loading bouquet…</div>
+      </div>
+    </div>
+    
+    <div id="info-overlay" class="hidden">
+      <div id="info-popup">
+        <button id="info-close" aria-label="Close">&times;</button>
+        <h2>How to Use</h2>
+        <ul>
+          <li><strong>Drag flowers</strong> to move them around</li>
+          <li><strong>Click a flower</strong> to bring it to the front</li>
+          <li><strong>New Bouquet</strong> generates a fresh arrangement</li>
+          <li><strong>Save</strong> to add your creation to the gallery</li>
+          <li><strong>Gallery</strong> to see everyone's bouquets</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="gallery-overlay" class="hidden">
+      <button id="gallery-close" aria-label="Close">&times;</button>
+      <div id="gallery-container">
+        <button id="gallery-prev" aria-label="Previous">&larr;</button>
+        <div id="gallery-main">
+          <img id="gallery-image" src="" alt="Gallery photo" />
+          <p id="gallery-empty">No photos yet. Be the first to save a bouquet!</p>
+        </div>
+        <button id="gallery-next" aria-label="Next">&rarr;</button>
+      </div>
+      <div id="gallery-counter">1 of 1</div>
+    </div>
+    
+  </body>
+</html>

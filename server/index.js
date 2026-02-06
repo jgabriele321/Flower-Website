@@ -45,10 +45,10 @@ app.post("/api/gallery/upload", async (req, res) => {
     const filename = `${Date.now()}.jpg`;
     const filepath = path.join(GALLERY_DIR, filename);
 
-    // Resize to 800px width and convert to JPEG
+    // Resize to 1600px width and convert to JPEG
     await sharp(imageBuffer)
-      .resize(800, null, { withoutEnlargement: true })
-      .jpeg({ quality: 85 })
+      .resize(1600, null, { withoutEnlargement: true })
+      .jpeg({ quality: 90 })
       .toFile(filepath);
 
     console.log(`Saved gallery image: ${filename}`);
@@ -90,6 +90,9 @@ app.get("/api/gallery/list", (req, res) => {
 app.get("/api/gallery/health", (req, res) => {
   res.json({ status: "ok", galleryDir: GALLERY_DIR });
 });
+
+// Serve gallery images (for local development)
+app.use("/gallery", express.static(GALLERY_DIR));
 
 app.listen(PORT, () => {
   console.log(`Gallery server running on port ${PORT}`);

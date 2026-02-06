@@ -68,7 +68,7 @@ def parse_args() -> argparse.Namespace:
         "--max-size",
         type=int,
         default=None,
-        help="Maximum width/height for resized assets (pixels). Default: auto-detect 50% of vase width.",
+        help="Maximum width/height for resized assets (pixels). If not specified, auto-detects 50%% of vase width.",
     )
     parser.add_argument(
         "--vase-dir",
